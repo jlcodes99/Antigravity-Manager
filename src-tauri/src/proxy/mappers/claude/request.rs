@@ -588,5 +588,80 @@ mod tests {
         assert!(resp_text.contains("file2.txt"));
         assert!(resp_text.contains("\n"));
     }
+
+    #[test]
+    fn test_signature_restoration() {
+        let tool_id = "call_restore_test".to_string();
+        let expected_sig = "secret_signature_123".to_string();
+
+        // 1. 模拟服务端缓存：将签名存入 map
+        let mut map = HashMap::new();
+        map.insert(tool_id.clone(), expected_sig.clone());
+        let signature_map = Some(Arc::new(Mutex::new(map)));
+
+        // 2. 构造一个 Claude 请求，其中的 ToolUse 缺失签名 (就像被客户端剥离了一样)
+        let req = ClaudeRequest {
+            model: "claude-3-5-sonnet".to_string(),
+            messages: vec![
+                Message {
+                    role: "assistant".to_string(),
+                    content: MessageContent::Array(vec![
+                        ContentBlock::ToolUse {
+                            id: tool_id.clone(),
+                            name: "search".to_string(),
+                            input: json!({"q": "test"}),
+                            signature: None, // 缺失签名
+                        }
+                    ]),
+                }
+            ],
+            system: None,
+            tools: None,
+            stream: false,
+            max_tokens: None,
+            temperature: None,
+            top_p: None,
+            top_k: None,
+            thinking: None,
+            metadata: None,
+        };
+
+        // 3. 执行转换
+        let result = transform_claude_request_in(&req, "test-project", signature_map);
+        assert!(result.is_ok());
+
+        let body = result.unwrap();
+        let contents = body["request"]["contents"].as_array().unwrap();
+        
+        // 4. 验证生成的 Gemini Parts
+        let parts = contents[0]["parts"].as_array().unwrap();
+        
+        // 验证签名是否被成功回填（在 Part 根部）
+        assert_eq!(parts[0]["thought_signature"], expected_sig);
+        assert_eq!(parts[0]["functionCall"]["id"], tool_id);
+
+        // 5. 额外验证：Thinking 块也应该带有签名
+        let thinking_msg = ClaudeRequest {
+            model: "claude-3-5-sonnet".to_string(),
+            messages: vec![
+                Message {
+                    role: "assistant".to_string(),
+                    content: MessageContent::Array(vec![
+                        ContentBlock::Thinking {
+                            thinking: "I am thinking".to_string(),
+                            signature: Some("thinking_sig_456".to_string()),
+                        }
+                    ]),
+                }
+            ],
+            // ... 其余字段
+            system: None, tools: None, stream: false, max_tokens: None,
+            temperature: None, top_p: None, top_k: None, thinking: None, metadata: None,
+        };
+        let thinking_result = transform_claude_request_in(&thinking_msg, "test", None).unwrap();
+        let thinking_parts = thinking_result["request"]["contents"][0]["parts"].as_array().unwrap();
+        assert_eq!(thinking_parts[0]["thought_signature"], "thinking_sig_456");
+        assert_eq!(thinking_parts[0]["thought"], true);
+    }
 }
 

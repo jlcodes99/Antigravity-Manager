@@ -345,7 +345,7 @@ mod tests {
             response_id: Some("resp_456".to_string()),
         };
 
-        let result = transform_response(&gemini_resp);
+        let result = transform_response(&gemini_resp, None);
         assert!(result.is_ok());
 
         let claude_resp = result.unwrap();
@@ -365,5 +365,49 @@ mod tests {
             }
             _ => panic!("Expected Text block"),
         }
+    }
+
+    #[tokio::test]
+    async fn test_signature_caching() {
+        use serde_json::json;
+        let signature_map = Arc::new(Mutex::new(HashMap::new()));
+        let tool_id = "call_cache_test".to_string();
+        let sig = "cache_sig_789".to_string();
+
+        let gemini_resp = GeminiResponse {
+            candidates: Some(vec![Candidate {
+                content: Some(GeminiContent {
+                    role: "model".to_string(),
+                    parts: vec![GeminiPart {
+                        text: None,
+                        thought: Some(true),
+                        thought_signature: Some(sig.clone()),
+                        function_call: Some(FunctionCall {
+                            name: "get_weather".to_string(),
+                            id: Some(tool_id.clone()),
+                            args: Some(json!({"location": "Chicago"})),
+                        }),
+                        function_response: None,
+                        inline_data: None,
+                    }],
+                }),
+                finish_reason: Some("STOP".to_string()),
+                index: Some(0),
+            }]),
+            usage_metadata: None,
+            model_version: Some("gemini-2.0-flash".to_string()),
+            response_id: Some("resp_789".to_string()),
+        };
+
+        // 执行转换，并传入 map
+        let result = transform_response(&gemini_resp, Some(signature_map.clone()));
+        assert!(result.is_ok());
+
+        // 给异步任务一点时间执行
+        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+        // 验证 map 中是否已经缓存了签名
+        let locked_map = signature_map.lock().await;
+        assert_eq!(locked_map.get(&tool_id), Some(&sig));
     }
 }
