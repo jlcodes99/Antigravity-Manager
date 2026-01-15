@@ -362,9 +362,13 @@
             "api_key": "API 金鑰",
             "api_key_tooltip": "啟用鑑權後，客戶端存取代理所需的共享金鑰。重新生成會立即使舊金鑰失效。",
             "btn_regenerate": "重新生成金鑰",
+            "btn_edit": "編輯",
+            "btn_save": "保存",
             "btn_copy": "複製",
             "btn_copied": "已複製",
             "warning_key": "注意：請妥善保管您的 API 金鑰，不要洩露給他人。",
+            "api_key_invalid": "API 密鑰格式無效,必須以 sk- 開頭且長度至少 10 個字符",
+            "api_key_updated": "API 密鑰已更新",
             "auth": {
                 "title": "存取授權",
                 "title_tooltip": "控制代理是否需要鑑權，以及哪些路由需要提供 API 金鑰。",

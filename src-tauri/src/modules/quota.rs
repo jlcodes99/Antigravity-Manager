@@ -224,6 +224,7 @@ pub async fn fetch_quota_with_cache(
 }
 
 /// 查询账号配额逻辑
+#[allow(dead_code)]
 pub async fn fetch_quota_inner(access_token: &str, email: &str) -> crate::error::AppResult<(QuotaData, Option<String>)> {
     fetch_quota_with_cache(access_token, email, None).await
 }
@@ -375,7 +376,6 @@ pub async fn warm_up_all_accounts() -> Result<String, String> {
             let total_before = warmup_items.len();
             
             // 过滤掉4小时内已预热的模型
-            let now_ts = chrono::Utc::now().timestamp();
             warmup_items.retain(|(email, model, _, _, _)| {
                 let history_key = format!("{}:{}:100", email, model);
                 !crate::modules::scheduler::check_cooldown(&history_key, 14400)

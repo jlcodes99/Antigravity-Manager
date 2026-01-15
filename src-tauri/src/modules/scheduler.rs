@@ -265,6 +265,7 @@ pub fn start_scheduler(app_handle: tauri::AppHandle) {
 }
 
 /// 为单个账号触发即时智能预热检查
+#[allow(dead_code)]
 pub async fn trigger_warmup_for_account(account: &Account) {
     // 获取有效 token
     let Ok((token, pid)) = quota::get_valid_token_for_warmup(account).await else {
