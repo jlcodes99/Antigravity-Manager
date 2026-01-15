@@ -298,7 +298,17 @@
             "clear_logs": "清理日志缓存",
             "clear_logs_title": "清理日志确认",
             "clear_logs_msg": "确定要清理所有日志缓存文件吗？",
-            "logs_cleared": "日志缓存已清理"
+            "logs_cleared": "日志缓存已清理",
+            "http_api_title": "HTTP API 服务",
+            "http_api_desc": "为外部程序（如 VS Code 插件）提供本地 HTTP 接口。",
+            "http_api_enabled": "启用 HTTP API",
+            "http_api_enabled_desc": "启用后，外部程序可通过 HTTP 接口管理账号",
+            "http_api_port": "监听端口",
+            "http_api_port_desc": "修改端口后需要重启应用才能生效。如遇端口冲突，请更换为其他未被占用的端口。",
+            "http_api_port_placeholder": "默认端口 19527",
+            "http_api_port_invalid": "端口号无效（范围：1024-65535）",
+            "http_api_settings_saved": "HTTP API 设置已保存，重启应用后生效",
+            "http_api_restart_required": "⚠️ 需要重启应用后生效"
         },
         "about": {
             "title": "关于",
